@@ -1,12 +1,12 @@
 --- 
     parameters: 
       buildConfiguration: Release
-      
+
     steps: 
         - task: DotNetCoreCLI@2
-            displayName: "Build the project - ${{ parameters.buildConfiguration }}"
+            displayName: 'Build the project - ${{ parameters.buildConfiguration }}'
             inputs: 
-                arguments: "--no-restore --configuration ${{ parameters.buildConfiguration }}"
+                arguments: '--no-restore --configuration ${{ parameters.buildConfiguration }}'
                 command: build
                 projects: "**/*.csproj"
         - task: DotNetCoreCLI@2
