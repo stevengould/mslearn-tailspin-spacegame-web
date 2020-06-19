@@ -1,20 +1,20 @@
 --- 
     parameters: 
       buildConfiguration: Release
-      steps: 
-        - 
-          displayName: "Build the project - ${{ parameters.buildConfiguration }}"
-          inputs: 
-            arguments: "--no-restore --configuration ${{ parameters.buildConfiguration }}"
-            command: build
-            projects: "**/*.csproj"
-          task: DotNetCoreCLI@2
-        - 
-          displayName: "Publish the project - ${{ parameters.buildConfiguration }}"
-          inputs: 
-            arguments: "--no-build --configuration ${{ parameters.buildConfiguration }} --output $(Build.ArtifactStagingDirectory)/${{ parameters.buildConfiguration }}"
-            command: publish
-            projects: "**/*.csproj"
-            publishWebProjects: false
-            zipAfterPublish: true
-          task: DotNetCoreCLI@2    
+    steps: 
+    - 
+        displayName: "Build the project - ${{ parameters.buildConfiguration }}"
+        inputs: 
+        arguments: "--no-restore --configuration ${{ parameters.buildConfiguration }}"
+        command: build
+        projects: "**/*.csproj"
+        task: DotNetCoreCLI@2
+    - 
+        displayName: "Publish the project - ${{ parameters.buildConfiguration }}"
+        inputs: 
+        arguments: "--no-build --configuration ${{ parameters.buildConfiguration }} --output $(Build.ArtifactStagingDirectory)/${{ parameters.buildConfiguration }}"
+        command: publish
+        projects: "**/*.csproj"
+        publishWebProjects: false
+        zipAfterPublish: true
+        task: DotNetCoreCLI@2    
