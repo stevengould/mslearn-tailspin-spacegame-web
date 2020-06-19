@@ -1,34 +1,54 @@
-# ASP.NET Core (.NET Framework)
-# Build and test ASP.NET Core projects targeting the full .NET Framework.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+--- 
+  pool: 
+    demands: 
+      - npm
+    vmImage: ubuntu-18.04
+  steps: 
+    - task: UseDotNet@2
+      displayName: "Use .NET Core SDK $(dotnetSdkVersion)"
+      inputs: 
+        version: $(dotnetSdkVersion)
+    - task: Npm@1
+      displayName: "Run npm install"
+      inputs: 
+        verbose: false
 
-trigger:
-- master
+    - script: "./node_modules/.bin/node-sass $(wwwrootDir) --output $(wwwrootDir)"
+      displayName: "Compile Sass assets"
+      
+    - task: gulp@1
+      displayName: "Run gulp tasks"
 
-pool:
-  vmImage: 'windows-latest'
-
-variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-
-steps:
-- task: NuGetToolInstaller@1
-
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
-
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    - script: "echo \"$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)\" > buildinfo.txt"
+      displayName: "Write build info"
+      workingDirectory: $(wwwrootDir)
+      
+    - task: DotNetCoreCLI@2
+      displayName: "Restore project dependencies"
+      inputs: 
+        command: restore
+        projects: "**/*.csproj"
+    - task: DotNetCoreCLI@2
+      displayName: "Build the project - $(buildConfiguration)"
+      inputs: 
+        arguments: "--no-restore --configuration $(buildConfiguration)"
+        command: build
+        projects: "**/*.csproj"
+    - task: DotNetCoreCLI@2
+      displayName: "Publish the project - $(buildConfiguration)"
+      inputs: 
+        arguments: "--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)"
+        command: publish
+        projects: "**/*.csproj"
+        publishWebProjects: false
+        zipAfterPublish: true
+    - task: PublishBuildArtifacts@1
+      condition: succeeded()
+      displayName: "Publish Artifact: drop"
+  trigger: 
+    - "*"
+  variables: 
+    buildConfiguration: Release
+    dotnetSdkVersion: "3.1.300"
+    wwwrootDir: Tailspin.SpaceGame.Web/wwwroot
+  
